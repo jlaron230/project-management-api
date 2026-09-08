@@ -30,7 +30,8 @@ final class ProjectController extends AbstractController
     #[Route('/api/projects', name: 'api_project-list_index', methods: ['GET'])]
     public function apiProjectList(ProjectRepository $projectRepository): Response
     {
-
+    // Standard users only receive projects they own.
+    // Administrators can access the full project list.
         if ($this->isGranted('ROLE_ADMIN')) {
             $project = $projectRepository->findAll();
         } else {
@@ -73,7 +74,7 @@ final class ProjectController extends AbstractController
                 'message' => 'Aucun projet trouvé',
             ], Response::HTTP_NOT_FOUND);
         }
-
+        // Resource-level authorization is delegated to ProjectVoter.
         $this->denyAccessUnlessGranted(ProjectVoter::VIEW, $project);
 
         return $this->json([
@@ -99,7 +100,7 @@ final class ProjectController extends AbstractController
                 "message" => "Il n'y a aucun projet trouvé"
             ], Response::HTTP_NOT_FOUND);
         }
-
+        // Resource-level authorization is delegated to ProjectVoter.
         $this->denyAccessUnlessGranted(ProjectVoter::DELETE, $project);
 
         $entityManager->remove($project);
@@ -153,6 +154,8 @@ final class ProjectController extends AbstractController
             ], Response::HTTP_BAD_REQUEST);
         }
 
+        // Ownership is always derived from the authenticated user.
+        // The client is never allowed to choose the project owner.
         $user = $this->getUser();
         $project = new Project();
         $project->setOwner($user);
@@ -188,7 +191,7 @@ final class ProjectController extends AbstractController
                 'message' => 'Aucun projet trouvé',
             ], Response::HTTP_NOT_FOUND);
         }
-
+        // Resource-level authorization is delegated to ProjectVoter.
         $this->denyAccessUnlessGranted(ProjectVoter::EDIT, $project);
 
         if(!is_array($data)) {
@@ -196,7 +199,7 @@ final class ProjectController extends AbstractController
                 'message' => 'data is not an array',
             ], Response::HTTP_BAD_REQUEST);
         }
-
+        // Only fields explicitly provided in the PATCH payload are updated.
         if(isset($data['name'])) {
             if (strLen(trim($data['name'])) < 3) {
                 return $this->json([

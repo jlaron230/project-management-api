@@ -14,6 +14,7 @@ class Project
     #[ORM\Column]
     private ?int $id = null;
 
+    // Each project must belong to an authenticated user.
     #[Groups('user')]
     #[ORM\ManyToOne(targetEntity: 'App\Entity\User', inversedBy: 'projects')]
     #[ORM\JoinColumn(nullable: false)]

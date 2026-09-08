@@ -33,7 +33,7 @@ class RegistrationController extends AbstractController
             /** @var string $plainPassword */
             $plainPassword = $form->get('plainPassword')->getData();
 
-            // encode the plain password
+            // Hash the plain password before persisting the user.
             $user->setPassword($userPasswordHasher->hashPassword($user, $plainPassword));
             $user->setAgreeTerms(true);
             $user->setRoles(['ROLE_USER']);
@@ -41,7 +41,7 @@ class RegistrationController extends AbstractController
             $entityManager->persist($user);
             $entityManager->flush();
 
-            // generate a signed url and email it to the user
+            // Generate a signed verification link and send it to the newly registered user.
             $this->emailVerifier->sendEmailConfirmation('app_verify_email', $user,
                 (new TemplatedEmail())
                     ->from(new Address('contact@jeromegavinodev.com', 'Test developer'))
@@ -62,10 +62,10 @@ class RegistrationController extends AbstractController
 
     #[Route('/verify/email', name: 'app_verify_email')]
     public function verifyUserEmail(Request $request, TranslatorInterface $translator): Response
-    {
+    {   // Only authenticated users can confirm the email associated with their account.
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
-        // validate email confirmation link, sets User::isVerified=true and persists
+        // Validate the signed verification link and mark the user as verified.
         try {
             /** @var User $user */
             $user = $this->getUser();
@@ -76,7 +76,6 @@ class RegistrationController extends AbstractController
             return $this->redirectToRoute('app_register');
         }
 
-        // @TODO Change the redirect on success and handle or remove the flash message in your templates
         $this->addFlash('success', 'Your email address has been verified.');
 
         return $this->redirectToRoute('app_register');

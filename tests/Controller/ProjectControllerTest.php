@@ -4,19 +4,17 @@ namespace App\Tests\Controller;
 
 use App\Entity\Project;
 use App\Entity\User;
-use App\Repository\ProjectRepository;
-use App\Repository\UserRepository;
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 final class ProjectControllerTest extends WebTestCase
 {
 
-    public function testVisitingWhileLoogedIn(): void
+    public function testUnauthenticatedUserIsRedirectedToLogin(): void
     {
         $client = static::createClient();
 
+        // Protected project routes require authentication.
         $client->request('GET', '/api/projects');
 
         $this->assertResponseRedirects('/login');
@@ -27,6 +25,7 @@ final class ProjectControllerTest extends WebTestCase
         $client = static::createClient();
         $entityManager = static::getContainer()->get(EntityManagerInterface::class);
 
+        // User A owns the project.
         $user = new User();
         $user->setEmail('user6@test.com');
         $user->setPassword('password123@');
@@ -36,6 +35,7 @@ final class ProjectControllerTest extends WebTestCase
 
         $client->loginUser($user);
 
+        // User B will attempt to modify User A's project.
         $userTestB = new User();
         $userTestB->setEmail('user7@test.com');
         $userTestB->setPassword('password123@');
@@ -44,6 +44,7 @@ final class ProjectControllerTest extends WebTestCase
         $entityManager->persist($userTestB);
         $entityManager->flush();
 
+        // Authenticate as User B before trying to edit User A's project.
         $client->loginUser($userTestB);
 
         $project = new Project();
@@ -59,8 +60,7 @@ final class ProjectControllerTest extends WebTestCase
             'name' => 'Test Project Description',
         ]);
 
-
+        // ProjectVoter must deny access because User B is not the owner.
         $this->assertResponseStatusCodeSame(403);
-
     }
 }

@@ -116,6 +116,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @see UserInterface
      */
+    // ROLE_USER is guaranteed even if no explicit role is stored in the database.
     public function getRoles(): array
     {
         $roles = $this->roles;
@@ -153,6 +154,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * Ensure the session doesn't contain actual password hashes by CRC32C-hashing them, as supported since Symfony 7.3.
      */
+    // Avoid storing the raw password hash in the session serialization.
     public function __serialize(): array
     {
         $data = (array) $this;
