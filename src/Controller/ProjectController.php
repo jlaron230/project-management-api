@@ -78,8 +78,8 @@ final class ProjectController extends AbstractController
         $this->denyAccessUnlessGranted(ProjectVoter::VIEW, $project);
 
         return $this->json([
-            'message' => 'List all projects',
-            'projects' => [
+            'message' => 'List a specific project',
+            'project' => [
                 'id' => $project->getId(),
                 'name' => $project->getName(),
                 'description' => $project->getDescription(),
@@ -136,7 +136,7 @@ final class ProjectController extends AbstractController
 
         if(!isset($data['status'])) {
             return $this->json([
-                'message' => 'Project is not todo'
+                'message' => 'Project is not status'
             ], Response::HTTP_BAD_REQUEST);
         }
 
