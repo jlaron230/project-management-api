@@ -7,6 +7,7 @@ use App\Entity\Project;
 use App\Repository\ProjectRepository;
 use App\Security\Voter\ProjectVoter;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -243,6 +244,18 @@ final class ProjectController extends AbstractController
                 'description' => $project->getDescription(),
             ]
         ]);
+    }
+
+    #[Route('/api/projects-stat', name: 'api_project_stats', methods: ['GET'])]
+    public function apiProjectStats(ProjectRepository $projectRepository): JsonResponse
+    {
+        if($this->isGranted('ROLE_ADMIN')) {
+            $project = $projectRepository->findProjectStatAdmin();
+        } else {
+            $project = $projectRepository->findProjectStat($this->getUser()->getId());
+        }
+
+        return new JsonResponse($project, Response::HTTP_OK);
     }
 
 }
